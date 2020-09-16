@@ -1,0 +1,8 @@
+# Byte-compiled / optimized / DLL files
+
+# IDE files (e.g. Jupyter Notebook, PyCharm)
+.ipynb_checkpoints
+.idea
+
+# folders
+results/
