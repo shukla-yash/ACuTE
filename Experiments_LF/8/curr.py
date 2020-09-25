@@ -174,7 +174,7 @@ if __name__ == "__main__":
 	LEARNING_RATE = 1e-3
 	DECAY_RATE = 0.99
 	MAX_EPSILON = 0.1
-	random_seed = 8
+	random_seed = 0
 
 	action_space = ['W','A','D','U','C']
 

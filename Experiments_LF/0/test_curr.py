@@ -170,7 +170,7 @@ if __name__ == "__main__":
 					env_flag = CheckTrainingDoneCallback(reward_arr, done_arr, i)
 		
 				# quit after some number of episodes
-				if episode > 60000 or env_flag == 1:
+				if episode > 50000 or env_flag == 1:
 
 					agent.save_model(0,0,i)
 					total_episodes_arr.append(episode)
@@ -262,7 +262,7 @@ if __name__ == "__main__":
 
 				final_timesteps_array.append(t_step)
 				final_reward_array.append(reward_sum)
-				final_avg_reward_array.append(avg_reward)
+				final_avg_reward_array.append(np.mean(reward_arr[-40:]))
 
 				done = True
 				t_step = 0
@@ -281,7 +281,7 @@ if __name__ == "__main__":
 				env_flag = 0
 		
 				# quit after some number of episodes
-				if episode > 60000 or env_flag == 1:
+				if episode > 50000 or env_flag == 1:
 
 					agent.save_model(1,0,0)
 
@@ -298,15 +298,64 @@ if __name__ == "__main__":
 	os.makedirs(log_dir, exist_ok = True)
 
 	total_timesteps_array = np.asarray(total_timesteps_array).astype(np.uint16)
-	total_reward_array = np.asarray(total_reward_array).astype(uint16)
-	avg_reward_array = np.asarray(avg_reward_array).astype(uint16)
-	total_episodes_arr = np.asarray(total_episodes_arr).astype(uint16)
-	final_timesteps_array = np.asarray(final_timesteps_array).astype(uint16)
-	final_reward_array = np.asarray(final_reward_array).astype(uint16)
-	final_avg_reward_array = np.asarray(final_avg_reward_array).astype(uint16)
+	print("size total_timesteps_array: ", total_timesteps_array.shape)
+	
+	total_reward_array = np.asarray(total_reward_array).astype(np.uint16)
+	print("size total_reward_array: ", total_reward_array.shape)
 
-	experiment_file_name = 'randomseed_' + str(random_seed)
-	path_to_save = log_dir + os.sep + experiment_file_name + '.npz'
-	np.savez_compressed(path_to_save, curriculum_timesteps = total_timesteps_array, curriculum_reward = total_reward_array, curriculum_avg_reward = avg_reward_array,\
-		episodes_arr = total_episodes_arr, final_timesteps = final_timesteps_array, final_reward = final_reward_array, final_avg_reward = final_avg_reward_array)
+	avg_reward_array = np.asarray(avg_reward_array).astype(np.uint16)
+	print("size avg_reward_array: ", avg_reward_array.shape)
 
+	total_episodes_arr = np.asarray(total_episodes_arr).astype(np.uint16)
+	print("size total_episodes_arr: ", total_episodes_arr.shape)
+
+	final_timesteps_array = np.asarray(final_timesteps_array).astype(np.uint16)
+	print("size final_timesteps_array: ", final_timesteps_array.shape)
+
+	final_reward_array = np.asarray(final_reward_array).astype(np.uint16)
+	print("size final_reward_array: ", final_reward_array.shape)
+
+	final_avg_reward_array = np.asarray(final_avg_reward_array).astype(np.uint16)
+	print("size final_avg_reward_array: ", final_avg_reward_array.shape)
+
+	experiment_file_name_total_timesteps = 'randomseed_' + str(random_seed) + '_total_timesteps'
+	path_to_save_total_timesteps = log_dir + os.sep + experiment_file_name_total_timesteps + '.npz'
+
+	experiment_file_name_total_reward = 'randomseed_' + str(random_seed) + '_total_reward'
+	path_to_save_total_reward = log_dir + os.sep + experiment_file_name_total_reward + '.npz'
+
+	experiment_file_name_avg_reward = 'randomseed_' + str(random_seed) + '_avg_reward'
+	path_to_save_avg_reward = log_dir + os.sep + experiment_file_name_avg_reward + '.npz'
+
+	experiment_file_name_total_episodes = 'randomseed_' + str(random_seed) + '_total_episodes'
+	path_to_save_total_episodes = log_dir + os.sep + experiment_file_name_total_episodes + '.npz'
+
+	experiment_file_name_final_timesteps = 'randomseed_' + str(random_seed) + '_final_timesteps'
+	path_to_save_final_timesteps = log_dir + os.sep + experiment_file_name_final_timesteps + '.npz'
+
+	experiment_file_name_final_reward = 'randomseed_' + str(random_seed) + '_final_reward'
+	path_to_save_final_reward = log_dir + os.sep + experiment_file_name_final_reward + '.npz'
+
+	experiment_file_name_final_avg_reward = 'randomseed_' + str(random_seed) + '_final_avg_reward'
+	path_to_save_final_avg_reward = log_dir + os.sep + experiment_file_name_final_avg_reward + '.npz'
+
+	np.savez_compressed(path_to_save_total_timesteps, curriculum_timesteps = total_timesteps_array)
+	# np.delete(total_timesteps_array)
+
+	np.savez_compressed(path_to_save_total_reward, curriculum_reward = total_reward_array)
+	# np.delete(total_reward_array)
+
+	np.savez_compressed(path_to_save_avg_reward, curriculum_avg_reward = avg_reward_array)
+	# np.delete(avg_reward_array)
+
+	np.savez_compressed(path_to_save_total_episodes, curriculum_episodes = total_episodes_arr)
+	# np.delete(total_episodes_arr)
+
+	np.savez_compressed(path_to_save_final_timesteps, final_timesteps = final_timesteps_array)
+	# np.delete(final_timesteps_array)
+
+	np.savez_compressed(path_to_save_final_reward, final_reward = final_reward_array)
+	# final_reward_array.cler()
+
+	np.savez_compressed(path_to_save_final_avg_reward, final_avg_reward = final_avg_reward_array)
+	# np.delete(final_avg_reward_array)
