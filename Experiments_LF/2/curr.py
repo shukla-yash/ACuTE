@@ -63,7 +63,7 @@ def parameterizing_function(navigation, breaking, crafting, prev_width, prev_hei
 
 
 	while True:
-		width = np.random.randint(6,11)
+		width = np.random.randint(8,12)
 		if width > prev_width:
 			break
 		elif prev_width == 11:
@@ -71,7 +71,7 @@ def parameterizing_function(navigation, breaking, crafting, prev_width, prev_hei
 			break
 
 	while True:
-		height = np.random.randint(6,11)
+		height = np.random.randint(8,12)
 		if height > prev_height:
 			break
 		elif prev_height == 11:
@@ -131,15 +131,15 @@ def parameterizing_function(navigation, breaking, crafting, prev_width, prev_hei
 		crafting_table = 0
 
 	if type_of_env == 2:
-		total_trees = np.random.randint(2,5)
-		starting_trees = np.random.randint(0, 2)
+		total_trees = 2
+		starting_trees = np.random.randint(0, 3)
 		no_trees = total_trees - starting_trees
 
-		total_rocks = np.random.randint(1,3)
+		total_rocks = 1
 		if total_rocks == 1:
 			starting_rocks = 0
 		else:
-			starting_rocks = np.random.randint(0, total_rocks - 1)
+			starting_rocks = np.random.randint(0, 2)
 		no_rocks = total_rocks - starting_rocks
 		crafting_table = 1
 
@@ -174,7 +174,7 @@ if __name__ == "__main__":
 	LEARNING_RATE = 1e-3
 	DECAY_RATE = 0.99
 	MAX_EPSILON = 0.1
-	random_seed = 0
+	random_seed = 2
 
 	action_space = ['W','A','D','U','C']
 
@@ -198,6 +198,7 @@ if __name__ == "__main__":
 
 		final_status = False
 		env_id = 'NovelGridworld-v0'
+
 		env = gym.make(env_id, map_width = width, map_height = height, items_quantity = {'tree': no_trees, 'rock': no_rocks, 'crafting_table': crafting_table, 'pogo_stick':0},
 			initial_inventory = {'wall': 0, 'tree': starting_trees, 'rock': starting_rocks, 'crafting_table': 0, 'pogo_stick':0}, goal_env = type_of_env, is_final = final_status)
 		
@@ -354,6 +355,8 @@ if __name__ == "__main__":
 				starting_trees_after.append(starting_trees)
 				starting_rocks_after.append(starting_rocks)
 				type_of_env_after.append(type_of_env)
+
+				print("here")
 
 				agent = SimpleDQN(actionCnt,D,NUM_HIDDEN,LEARNING_RATE,GAMMA,DECAY_RATE,MAX_EPSILON,random_seed)
 				agent.set_explore_epsilon(MAX_EPSILON)
@@ -575,7 +578,7 @@ if __name__ == "__main__":
 				# env_flag = 0
 		
 				# quit after some number of episodes
-				if episode > 40000 or env_flag == 1:
+				if episode > 50000 or env_flag == 1:
 
 					agent.save_model(curriculum_breadth,final_env,0)
 					final_episodes_array.append(episode)
