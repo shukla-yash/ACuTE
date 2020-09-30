@@ -587,3 +587,15 @@ if __name__ == "__main__":
 	print("Curriculum params: ", curriculum_params_2)
 	print("\n")
 	print("Time taken for the final environment is: ", final_episodes_array)
+	with open("output.txt", "w") as text_file:
+		print("Curriculum params: ", curriculum_params_2, file=text_file)
+		print("\n", file=text_file)
+		print("Time taken for the final environment is: ", final_episodes_array, file=text_file)
+
+	import pickle
+
+	db_file_name = "output.bin"
+	output_file = open(db_file_name, "wb")
+	pickle.dump(curriculum_params_2, output_file)
+	pickle.dump(final_episodes_array, output_file)
+	output_file.close()
