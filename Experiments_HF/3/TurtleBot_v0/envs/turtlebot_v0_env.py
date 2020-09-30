@@ -42,9 +42,9 @@ class TurtleBotV0Env(gym.Env):
 		self.reward_hit_wall = -2
 		self.reward_extra_inventory = 0
 
-		self.half_beams = 30
-		self.angle_increment = np.pi/30
-		self.angle_increment_deg = 6
+		self.half_beams = 10
+		self.angle_increment = np.pi/10
+		self.angle_increment_deg = 18
 
 		self.time_per_episode = 300
 		self.sense_range = 5.7
@@ -101,9 +101,9 @@ class TurtleBotV0Env(gym.Env):
 
 		for i in range(self.n_table):
 			if abs(-self.width/2+self.width*x_rand[i + self.n_trees + self.n_rocks]) < 0.3 and abs(-self.height/2+self.height*y_rand[i + self.n_trees + self.n_rocks]) < 0.3:
-				self.x_pos.append(1.8)
-				self.y_pos.append(1.8)
-				self.table.append(p.loadURDF("table.urdf", basePosition=[1.8,1.8, 0], useFixedBase = 1))
+				self.x_pos.append(self.width - 0.05)
+				self.y_pos.append(self.height - 0.05)
+				self.table.append(p.loadURDF("table.urdf", basePosition=[self.width - 0.05, self.height - 0.05, 0], useFixedBase = 1))
 			else:
 				self.x_pos.append(-self.width/2+self.width*x_rand[i + self.n_trees + self.n_rocks])
 				self.y_pos.append(-self.height/2+self.height*y_rand[i + self.n_trees + self.n_rocks])
@@ -264,7 +264,7 @@ class TurtleBotV0Env(gym.Env):
 			if (self.inventory['wood'] >= self.n_trees_org + self.starting_trees or self.inventory['wood'] >= 2) and (self.inventory['stone'] >= self.n_rocks_org + self.starting_rocks or self.inventory['stone'] >= 1):
 				reward = self.reward_done
 				done = True
-				print("Inventory: ", self.inventory)
+				# print("Inventory: ", self.inventory)
 
 		self.env_step_counter += 1
 
@@ -351,7 +351,7 @@ class TurtleBotV0Env(gym.Env):
 
 			current_angle_deg += self.angle_increment_deg
 
-			if current_angle_deg >= 355 + rot_degree:
+			if current_angle_deg >= 343 + rot_degree:
 				break
 
 		while len(lidar_readings) < self.half_beams*2*num_obj_types:

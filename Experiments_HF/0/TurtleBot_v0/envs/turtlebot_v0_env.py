@@ -42,9 +42,9 @@ class TurtleBotV0Env(gym.Env):
 		self.reward_hit_wall = -2
 		self.reward_extra_inventory = 0
 
-		self.half_beams = 30
-		self.angle_increment = np.pi/30
-		self.angle_increment_deg = 6
+		self.half_beams = 10
+		self.angle_increment = np.pi/10
+		self.angle_increment_deg = 18
 
 		self.time_per_episode = 300
 		self.sense_range = 5.7
@@ -101,9 +101,9 @@ class TurtleBotV0Env(gym.Env):
 
 		for i in range(self.n_table):
 			if abs(-self.width/2+self.width*x_rand[i + self.n_trees + self.n_rocks]) < 0.3 and abs(-self.height/2+self.height*y_rand[i + self.n_trees + self.n_rocks]) < 0.3:
-				self.x_pos.append(1.8)
-				self.y_pos.append(1.8)
-				self.table.append(p.loadURDF("table.urdf", basePosition=[1.8,1.8, 0], useFixedBase = 1))
+				self.x_pos.append(self.width/2 - 0.05)
+				self.y_pos.append(self.height/2 - 0.05)
+				self.table.append(p.loadURDF("table.urdf", basePosition=[self.width/2 - 0.05, self.height/2 - 0.05, 0], useFixedBase = 1))
 			else:
 				self.x_pos.append(-self.width/2+self.width*x_rand[i + self.n_trees + self.n_rocks])
 				self.y_pos.append(-self.height/2+self.height*y_rand[i + self.n_trees + self.n_rocks])
@@ -118,7 +118,7 @@ class TurtleBotV0Env(gym.Env):
 		obs = self.get_observation()
 		self.x_pos_copy = copy.deepcopy(self.x_pos)
 		self.y_pos_copy = copy.deepcopy(self.y_pos)
-
+		self.nav_count = 0
 		return obs
 
 	def step(self, action):
@@ -136,22 +136,17 @@ class TurtleBotV0Env(gym.Env):
 		leftWheelVelocity = 0
 		object_removed = 0
 		index_removed = 0
-		
-		# if action == 0: # Turn left
-		# 	turn = 0.5
-		# 	rightWheelVelocity = turn*speed
-		# 	leftWheelVelocity = -turn*speed
-
 
 		if action == 0: # Turn right
 			turn = 0.5
 			rightWheelVelocity = -turn*speed
 			leftWheelVelocity = turn*speed
-
+			self.nav_count += 1
 		elif action == 1: # Turn left
 			turn = 0.5
 			rightWheelVelocity = turn*speed
 			leftWheelVelocity = -turn*speed
+			self.nav_count += 1
 
 		elif action == 2: #Move forward
 			x_new = basePos[0] + 0.05*np.cos(rot_angle)
@@ -204,9 +199,6 @@ class TurtleBotV0Env(gym.Env):
 				p.removeBody(self.trees[index_removed])
 				self.trees.pop(index_removed)
 				self.n_trees -= 1
-				# print("tree removed")
-
-				# print("obs: ",self.get_observation())
 
 			if object_removed == 2:
 				self.x_pos.pop(index_removed)
@@ -218,8 +210,7 @@ class TurtleBotV0Env(gym.Env):
 				p.removeBody(self.rocks[index_removed-self.n_trees])
 				self.rocks.pop(index_removed-self.n_trees)
 				self.n_rocks -= 1
-				# print("rock removed")
-				# print("obs: ",self.get_observation())
+
 
 		elif action == 4: # Craft
 			x = basePos[0]
@@ -235,14 +226,6 @@ class TurtleBotV0Env(gym.Env):
 								self.inventory['stone'] -= 1 
 								done = True
 								reward = self.reward_done
-
-
-				# elif self.inventory['wood'] == 1 or self.inventory['stone'] == 1:
-				# 	reward = self.reward_done
-				# 	done = True
-
-		# if done == True:
-			# print("inventory: ", self.inventory)
 
 
 		for i in range(10):
@@ -264,16 +247,11 @@ class TurtleBotV0Env(gym.Env):
 			if (self.inventory['wood'] >= self.n_trees_org + self.starting_trees or self.inventory['wood'] >= 2) and (self.inventory['stone'] >= self.n_rocks_org + self.starting_rocks or self.inventory['stone'] >= 1):
 				reward = self.reward_done
 				done = True
-				print("Inventory: ", self.inventory)
 
 		self.env_step_counter += 1
 
-		# if self.env_step_counter >= self.time_per_episode:
-		# 	done = True
-
 		obs = self.get_observation()
 
-		# print(obs)
 		return obs, reward, done, {}
 
 	def get_observation(self):
@@ -351,7 +329,7 @@ class TurtleBotV0Env(gym.Env):
 
 			current_angle_deg += self.angle_increment_deg
 
-			if current_angle_deg >= 355 + rot_degree:
+			if current_angle_deg >= 343 + rot_degree:
 				break
 
 		while len(lidar_readings) < self.half_beams*2*num_obj_types:
