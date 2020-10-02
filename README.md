@@ -7,11 +7,9 @@ For running experiments in High Fidelity, run test_curr.py.
 
 
 The folder Experiments_HF_AC corresponds to the automated curriculum (AC) experiments in the high fidelity environment.
-<<<<<<< HEAD
-Run:  { $ python test_curr.py } to test the curriculum
-=======
-
 Run:  { $ python test_curr.py } to test the curriculum
 
+In Experiments_HF_AC/
 
 Folders added: 0/ 5/ 6/ 8/
+New folder added: 1/
