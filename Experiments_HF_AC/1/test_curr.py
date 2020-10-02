@@ -48,7 +48,7 @@ if __name__ == "__main__":
 	LEARNING_RATE = 1e-3
 	DECAY_RATE = 0.99
 	MAX_EPSILON = 0.1
-	random_seed = 8
+	random_seed = 0
 
 	action_space = ['W','A','D','U','C']
 	total_episodes_arr = []
@@ -147,7 +147,7 @@ if __name__ == "__main__":
 					env_flag = CheckTrainingDoneCallback(reward_arr, done_arr, i)
 		
 				# quit after some number of episodes
-				if episode > 3 or env_flag == 1:
+				if episode > 35000 or env_flag == 1:
 
 					agent.save_model(0,0,i)
 					total_episodes_arr.append(episode)
@@ -156,7 +156,7 @@ if __name__ == "__main__":
 
 	print("Total epsiode array is: ", total_episodes_arr)
 
-	log_dir = 'logs'
+	log_dir = 'logs_' + str(random_seed)
 	os.makedirs(log_dir, exist_ok = True)
 
 	total_timesteps_array = np.asarray(total_timesteps_array)
