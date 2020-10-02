@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
-import copy
+
 import pybullet as p
 
 # REWARD_STEP = -1
@@ -17,61 +17,60 @@ import pybullet as p
 # number_of_episodes = 50000
 # time_per_episode = 600
 
-class TurtleBotV0Env(gym.Env):
+class TurtleBotV1Env(gym.Env):
 
-	def __init__(self, map_width=None, map_height=None, items_id=None, items_quantity=None, initial_inventory = None, goal_env = None, is_final = False):
-		# super(TurtleBotV0Env, self).__init__()
+	def __init__(self):
+		super(TurtleBotV1Env, self).__init__()
 
 		# p.connect(p.GUI)
 		# p.connect(p.SHARED_MEMORY)
 		p.connect(p.DIRECT)
 
 
-		self.width = map_width
-		self.height = map_height
+		self.width = 4
+		self.height = 4
 		self.object_types = [0,1,2,3] # we have 4 objects: wall, tree, rock, and craft table
 
 
 		self.reward_step  = -1
 		self.reward_done = 1000
-		if is_final == True:
-			self.reward_break = 0
-		else:
-			self.reward_break = 50
+		self.reward_break = 100
+		self.reward_hit_wall = -20
+		self.reward_extra_inventory = 100
 
-		self.reward_hit_wall = -2
-		self.reward_extra_inventory = 0
+		self.half_beams = 45
+		self.angle_increment = np.pi/45
+		self.angle_increment_deg = 4
 
-		self.half_beams = 10
-		self.angle_increment = np.pi/10
-		self.angle_increment_deg = 18
-
-		self.time_per_episode = 300
-		self.sense_range = 5.7
+		self.number_of_episodes = 50000
+		self.time_per_episode = 500
+		self.sense_range = 6
 
 		low = np.zeros(self.half_beams*2*len(self.object_types) + 3)
 		high = np.ones(self.half_beams*2*len(self.object_types) + 3)
 		# inventory_array = np.array([5,2])
 		# high = np.append(high_array, inventory_array)
 		self.observation_space = spaces.Box(low, high, dtype = float)
-		self.action_space = spaces.Discrete(5)
+		self.action_space = spaces.Discrete(6)
 		self.num_envs = 1
 		self.reset_time = 0
+		self.task_done = 0
 
-		self.n_trees_org = items_quantity['tree']
-		self.n_rocks_org = items_quantity['rock']
-		self.n_crafting_table = items_quantity['crafting_table']
-		self.starting_trees = initial_inventory['tree']
-		self.starting_rocks = initial_inventory['rock']
-		self.goal_env = goal_env
-	
 	def reset(self):
+		# for i in range(self.n_trees):
+		# 	p.removeBody(self.trees[i])
+		# for i in range(self.n_rocks):
+		# 	p.removeBody(self.rocks[i])
+		# for i in range(self.n_table):
+		# 	p.removeBody(self.table[i])
+		if self.reset_time % 20 == 0:
+			print("Reset called: ", self.reset_time)
+			print("Tasks successfully done: ", self.task_done)
 
-		# print("reset called: ", self.reset_time)
 		self.reset_time += 1
 		p.resetSimulation()
 		p.setGravity(0,0,-10)
-		# p.setTimeStep(0.01)
+		p.setTimeStep(0.01)
 
 		self.env_step_counter = 0 
 		offset = [0,0,0]
@@ -81,9 +80,12 @@ class TurtleBotV0Env(gym.Env):
 		self.trees = []
 		self.rocks = []
 		self.table = []
-		self.n_trees = self.n_trees_org
-		self.n_rocks = self.n_rocks_org
-		self.n_table = self.n_crafting_table
+		self.n_trees = 1
+		self.n_trees_org = 1
+		self.n_rocks = 0
+		self.n_rocks_org = 0
+		self.n_table = 0
+		self.n_table_org = 0
 		x_rand = np.random.rand(self.n_trees + self.n_rocks + self.n_table, 1)
 		y_rand = np.random.rand(self.n_trees + self.n_rocks + self.n_table, 1)
 		self.x_pos = []
@@ -101,24 +103,26 @@ class TurtleBotV0Env(gym.Env):
 
 		for i in range(self.n_table):
 			if abs(-self.width/2+self.width*x_rand[i + self.n_trees + self.n_rocks]) < 0.3 and abs(-self.height/2+self.height*y_rand[i + self.n_trees + self.n_rocks]) < 0.3:
-				self.x_pos.append(self.width/2 - 0.05)
-				self.y_pos.append(self.height/2 - 0.05)
-				self.table.append(p.loadURDF("table.urdf", basePosition=[self.width/2 - 0.05, self.height/2 - 0.05, 0], useFixedBase = 1))
+				self.x_pos.append(1.8)
+				self.y_pos.append(1.8)
+				self.table.append(p.loadURDF("table.urdf", basePosition=[1.8,1.8, 0], useFixedBase = 1))
 			else:
 				self.x_pos.append(-self.width/2+self.width*x_rand[i + self.n_trees + self.n_rocks])
 				self.y_pos.append(-self.height/2+self.height*y_rand[i + self.n_trees + self.n_rocks])
 				self.table.append(p.loadURDF("table.urdf", basePosition=[-self.width/2+self.width*x_rand[i+self.n_trees+self.n_rocks], -self.height/2+self.height*y_rand[i+self.n_rocks+self.n_trees], 0], useFixedBase = 1))
 
-		self.inventory = dict([('wood', self.starting_trees), ('stone', self.starting_rocks),('pogo',0)])
+				# self.x_pos.append(2.1)
+				# self.y_pos.append(1.1)
+				# self.table.append(p.loadURDF("table.urdf", basePosition=[2.1,1.1, 0], useFixedBase = 1))
+
+		self.inventory = dict([('wood', 0), ('stone', 0),('pogo',0)])
 		self.x_low = [i-0.15 for i in self.x_pos]
 		self.x_high = [i+0.15 for i in self.x_pos]
 		self.y_low = [i-0.15 for i in self.y_pos]
 		self.y_high = [i+0.15 for i in self.y_pos]
 
-		obs = self.get_observation()
-		self.x_pos_copy = copy.deepcopy(self.x_pos)
-		self.y_pos_copy = copy.deepcopy(self.y_pos)
-		self.nav_count = 0
+		obs = self.get_obs()
+
 		return obs
 
 	def step(self, action):
@@ -136,17 +140,16 @@ class TurtleBotV0Env(gym.Env):
 		leftWheelVelocity = 0
 		object_removed = 0
 		index_removed = 0
-
-		if action == 0: # Turn right
-			turn = 0.5
-			rightWheelVelocity = -turn*speed
-			leftWheelVelocity = turn*speed
-			self.nav_count += 1
-		elif action == 1: # Turn left
+		
+		if action == 0: # Turn left
 			turn = 0.5
 			rightWheelVelocity = turn*speed
 			leftWheelVelocity = -turn*speed
-			self.nav_count += 1
+
+		if action == 1: # Turn right
+			turn = 0.5
+			rightWheelVelocity = -turn*speed
+			leftWheelVelocity = turn*speed
 
 		elif action == 2: #Move forward
 			x_new = basePos[0] + 0.05*np.cos(rot_angle)
@@ -164,30 +167,44 @@ class TurtleBotV0Env(gym.Env):
 			rightWheelVelocity = forward*speed
 			leftWheelVelocity = forward*speed
 
-		elif action == 3: # Break
+		elif action == 3: # Move backward
+			x_new = basePos[0] - 0.05*np.cos(rot_angle)
+			y_new = basePos[1] - 0.05*np.sin(rot_angle)
+			forward = 1
+			for i in range(self.n_trees+self.n_rocks+self.n_table):
+				if abs(self.x_pos[i] - x_new) < 0.05:
+					if abs(self.y_pos[i] - y_new) < 0.05:
+						forward = 0
+
+			if (abs(abs(x_new) - abs(self.width/2)) < 0.05) or (abs(abs(y_new) - abs(self.height/2)) < 0.05):
+				reward = self.reward_hit_wall
+				forward = 0
+
+			rightWheelVelocity = -forward*speed
+			leftWheelVelocity = -forward*speed
+
+		elif action == 4: # Break
 			x = basePos[0]
 			y = basePos[1]
-			# print("Inventory: ", self.inventory)
 			for i in range(self.n_trees+self.n_rocks+self.n_table):
 				if abs(self.x_pos[i] - x) < 0.3:
 					if abs(self.y_pos[i] - y) < 0.3:
 						if i < self.n_trees:
-							self.inventory['wood'] += 1
+							self.inventory['wood'] += 1/self.n_trees_org
 							object_removed = 1 
 							index_removed = i 
-							if self.inventory['wood'] <= 2:
+							if self.inventory['wood'] <= 3/self.n_trees_org:
 								reward = self.reward_break
-							elif self.inventory['wood'] > 2:
+							elif self.inventory['wood'] > 2/self.n_trees_org:
 								reward = self.reward_extra_inventory
 						elif i > self.n_trees-1 and i<self.n_trees+self.n_rocks:
-							self.inventory['stone'] += 1
+							self.inventory['stone'] += 1/self.n_rocks_org
 							object_removed = 2
 							index_removed = i
-							if self.inventory['stone'] <= 1:
+							if self.inventory['stone'] <= 1/self.n_rocks_org:
 								reward = self.reward_break
-							elif self.inventory['stone'] > 1:
+							elif self.inventory['stone'] > 1/self.n_rocks_org:
 								reward = self.reward_extra_inventory
-
 		
 			if object_removed == 1:
 				self.x_pos.pop(index_removed)
@@ -200,6 +217,15 @@ class TurtleBotV0Env(gym.Env):
 				self.trees.pop(index_removed)
 				self.n_trees -= 1
 
+			if self.inventory['wood'] == 1/self.n_trees_org:
+				reward = self.reward_done
+				done = True
+				self.task_done += 1
+
+
+				# print("tree removed! Task Solved")
+				# print("obs: ",self.get_obs())
+
 			if object_removed == 2:
 				self.x_pos.pop(index_removed)
 				self.y_pos.pop(index_removed)
@@ -210,9 +236,10 @@ class TurtleBotV0Env(gym.Env):
 				p.removeBody(self.rocks[index_removed-self.n_trees])
 				self.rocks.pop(index_removed-self.n_trees)
 				self.n_rocks -= 1
+				# print("rock removed")
+				# print("obs: ",self.get_obs())
 
-
-		elif action == 4: # Craft
+		elif action == 5: # Craft
 			x = basePos[0]
 			y = basePos[1]
 
@@ -220,41 +247,29 @@ class TurtleBotV0Env(gym.Env):
 				if abs(self.x_pos[i] - x) < 0.3:
 					if abs(self.y_pos[i] - y) < 0.3:
 						if i > self.n_trees + self.n_rocks - 1:
-							if self.inventory['wood'] >= 2 and self.inventory['stone'] >= 1:
+							if self.inventory['wood'] >= 2/self.n_trees_org and self.inventory['stone'] >= 1/self.n_rocks_org:
 								self.inventory['pogo'] += 1
-								self.inventory['wood'] -= 2
-								self.inventory['stone'] -= 1 
+								self.inventory['wood'] -= 2/self.n_trees_org
+								self.inventory['stone'] -= 1/self.n_rocks_org 
 								done = True
 								reward = self.reward_done
-
 
 		for i in range(10):
 			p.setJointMotorControl2(self.turtle,0,p.VELOCITY_CONTROL,targetVelocity=leftWheelVelocity,force=1000)
 			p.setJointMotorControl2(self.turtle,1,p.VELOCITY_CONTROL,targetVelocity=rightWheelVelocity,force=1000)
 			p.stepSimulation()
 
-		if self.goal_env == 0:
-			x = basePos[0]
-			y = basePos[1]
-			for i in range(self.n_trees_org+self.n_rocks_org+self.n_table):
-				if abs(self.x_pos_copy[i] - x) < 0.3:
-					if abs(self.y_pos_copy[i] - y) < 0.3:
-						reward = self.reward_done
-						done = True
-
-
-		elif self.goal_env == 1:
-			if (self.inventory['wood'] >= self.n_trees_org + self.starting_trees or self.inventory['wood'] >= 2) and (self.inventory['stone'] >= self.n_rocks_org + self.starting_rocks or self.inventory['stone'] >= 1):
-				reward = self.reward_done
-				done = True
-
 		self.env_step_counter += 1
 
-		obs = self.get_observation()
+		if self.env_step_counter >= self.time_per_episode:
+			done = True
 
+		obs = self.get_obs()
+
+		# print(obs)
 		return obs, reward, done, {}
 
-	def get_observation(self):
+	def get_obs(self):
 
 		num_obj_types = len(self.object_types)
 
@@ -329,7 +344,7 @@ class TurtleBotV0Env(gym.Env):
 
 			current_angle_deg += self.angle_increment_deg
 
-			if current_angle_deg >= 343 + rot_degree:
+			if current_angle_deg >= 357 + rot_degree:
 				break
 
 		while len(lidar_readings) < self.half_beams*2*num_obj_types:
