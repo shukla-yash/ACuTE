@@ -35,9 +35,9 @@ class TurtleBotV0Env(gym.Env):
 		self.reward_step  = -1
 		self.reward_done = 1000
 		if is_final == True:
-			self.reward_break = 50
+			self.reward_break = 0
 		else:
-			self.reward_break = 1
+			self.reward_break = 50
 
 		self.reward_hit_wall = -2
 		self.reward_extra_inventory = 0
